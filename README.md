@@ -292,3 +292,119 @@ After `npm start`, the app is served at:
 ```text
 http://localhost:8787/schema/
 ```
+## Unix Socket Deployment
+
+The Node server can listen on either TCP or a Unix domain socket.
+
+TCP environment:
+
+- `PORT`: TCP port, default `8787`.
+- `HOST`: optional bind host.
+
+Unix socket environment:
+
+- `SCHEMA_SOCKET`: socket path, for example `/run/schema-explorer/schema.sock`.
+- `SCHEMA_SOCKET_MODE`: optional octal socket mode, for example `660`.
+- `SOCKET_PATH` and `SOCKET_MODE` are accepted aliases.
+
+When `SCHEMA_SOCKET` or `SOCKET_PATH` is set, socket mode wins over TCP mode.
+
+Example:
+
+```sh
+SCHEMA_SOCKET=/run/schema-explorer/schema.sock SCHEMA_SOCKET_MODE=660 npm start
+```
+
+### Nginx
+
+Use an upstream that points at the Unix socket and proxy `/schema/` through unchanged. The app expects to receive `/schema/...` paths.
+
+```nginx
+upstream schema_explorer {
+    server unix:/run/schema-explorer/schema.sock;
+}
+
+server {
+    listen 80;
+    server_name example.com;
+
+    location = /schema {
+        return 301 /schema/;
+    }
+
+    location /schema/ {
+        proxy_pass http://schema_explorer;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+If nginx runs as `www-data`, make sure the service's socket group is readable by nginx. The systemd unit below does that by running the app with `Group=www-data` and setting `SCHEMA_SOCKET_MODE=660`.
+
+### Systemd
+
+Example unit at `/etc/systemd/system/schema-explorer.service`:
+
+```ini
+[Unit]
+Description=Schema Explorer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=schema-explorer
+Group=www-data
+WorkingDirectory=/opt/schema-explorer
+Environment=NODE_ENV=production
+Environment=SCHEMA_SOCKET=/run/schema-explorer/schema.sock
+Environment=SCHEMA_SOCKET_MODE=660
+RuntimeDirectory=schema-explorer
+RuntimeDirectoryMode=0750
+ExecStart=/usr/bin/node /opt/schema-explorer/dist-server/index.js
+Restart=on-failure
+RestartSec=3
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/schema-explorer
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Install and start:
+
+```sh
+sudo useradd --system --home /opt/schema-explorer --shell /usr/sbin/nologin schema-explorer
+sudo mkdir -p /opt/schema-explorer
+sudo chown schema-explorer:www-data /opt/schema-explorer
+
+npm ci
+npm run build
+
+sudo rsync -a --delete dist dist-server package.json package-lock.json node_modules /opt/schema-explorer/
+sudo systemctl daemon-reload
+sudo systemctl enable --now schema-explorer
+sudo systemctl status schema-explorer
+```
+
+Check the socket through curl:
+
+```sh
+curl -I --unix-socket /run/schema-explorer/schema.sock http://localhost/schema/
+```
+
+Then reload nginx:
+
+```sh
+sudo nginx -t
+sudo systemctl reload nginx
+```
