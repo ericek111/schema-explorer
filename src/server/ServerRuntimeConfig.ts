@@ -13,6 +13,14 @@ export type ListenConfig =
 export class ServerRuntimeConfig {
   constructor(private readonly env: NodeJS.ProcessEnv = process.env) {}
 
+  basePath(): string {
+    const value = this.env.SCHEMA_BASE_PATH || this.env.BASE_PATH || '/schema';
+    if (!value.startsWith('/')) {
+      throw new Error(`Base path must start with "/": ${value}`);
+    }
+    return value === '/' ? '/' : value.replace(/\/+$/, '');
+  }
+
   listenConfig(): ListenConfig {
     const socketPath = this.env.SCHEMA_SOCKET || this.env.SOCKET_PATH;
     if (socketPath) {

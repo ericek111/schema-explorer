@@ -7,7 +7,7 @@ export function RawJsonView({ blocks, sourceUrl }: { blocks: JsonLdBlock[]; sour
     <section className="raw-json-view">
       <header className="raw-json-header">
         <h2>Raw JSON-LD</h2>
-        <span>{sourceUrl || '/schema/'}</span>
+        <span>{sourceUrl || import.meta.env.BASE_URL}</span>
       </header>
       {blocks.length ? (
         <div className="raw-json-blocks">

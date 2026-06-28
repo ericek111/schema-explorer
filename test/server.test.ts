@@ -51,4 +51,23 @@ describe('/schema/api/fetch', () => {
     const response = await app.request('/schema/api/fetch?url=https%3A%2F%2Fexample.com');
     expect(response.status).toBe(504);
   });
+
+  it('mounts the fetch API under a configured subdirectory', async () => {
+    const app = createTestApp({
+      basePath: '/explorer',
+      fetchImpl: async () => new Response(html, { status: 200 })
+    });
+
+    expect((await app.request('/schema/api/fetch?url=https%3A%2F%2Fexample.com')).status).toBe(404);
+    expect((await app.request('/explorer/api/fetch?url=https%3A%2F%2Fexample.com')).status).toBe(200);
+  });
+
+  it('can mount the fetch API at the site root', async () => {
+    const app = createTestApp({
+      basePath: '/',
+      fetchImpl: async () => new Response(html, { status: 200 })
+    });
+
+    expect((await app.request('/api/fetch?url=https%3A%2F%2Fexample.com')).status).toBe(200);
+  });
 });

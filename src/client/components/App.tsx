@@ -201,7 +201,7 @@ export function App(): React.JSX.Element {
                 </button>
               </div>
             </div>
-            <span>{sourceUrl || '/schema/'}</span>
+            <span>{sourceUrl || import.meta.env.BASE_URL}</span>
           </div>
           {graph.nodes.length === 0 ? (
             <EmptyState blocks={blocks} />
