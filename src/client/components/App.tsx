@@ -22,7 +22,7 @@ const emptyGraph: GraphModel = { nodes: [], edges: [], inbound: {}, byKey: {}, b
 
 export function App(): React.JSX.Element {
   const initialLocation = useMemo(() => appHistory.current(), []);
-  const [url, setUrl] = useState('https://schema.org/');
+  const [url, setUrl] = useState(initialLocation.url ?? 'https://schema.org/');
   const [blocks, setBlocks] = useState<JsonLdBlock[]>([]);
   const [graph, setGraph] = useState<GraphModel>(emptyGraph);
   const [findings, setFindings] = useState<ValidationFinding[]>([]);
@@ -42,6 +42,9 @@ export function App(): React.JSX.Element {
       if (location.view) {
         setAppView(location.view);
       }
+      if (location.url) {
+        setUrl(location.url);
+      }
       setSelectedKey(location.node);
       setSpecSelection(location.spec);
     };
@@ -49,26 +52,36 @@ export function App(): React.JSX.Element {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  useEffect(() => {
+    if (initialLocation.url) {
+      void loadUrl(initialLocation.url, initialLocation.node);
+    }
+  }, []);
+
   const selectView = useCallback((view: AppView) => {
     setAppView(view);
-    appHistory.push({ view });
-  }, []);
+    appHistory.push({ view, url: sourceUrl || url });
+  }, [sourceUrl, url]);
 
   const selectNode = useCallback((key: string) => {
     setSelectedKey(key);
-    appHistory.push({ view: 'explorer', node: key, spec: undefined });
-  }, []);
+    appHistory.push({ view: 'explorer', url: sourceUrl || url, node: key, spec: undefined });
+  }, [sourceUrl, url]);
 
   const selectSpec = useCallback((selection: SpecSelection) => {
     // Spec links can be opened from the JSON explorer, so selecting one also
     // switches the active top-level tab and writes a deep-linkable URL.
     setAppView('spec');
     setSpecSelection(selection);
-    appHistory.push({ view: 'spec', spec: selection, node: undefined });
-  }, []);
+    appHistory.push({ view: 'spec', url: sourceUrl || url, spec: selection, node: undefined });
+  }, [sourceUrl, url]);
 
   async function load(event: React.FormEvent): Promise<void> {
     event.preventDefault();
+    await loadUrl(url);
+  }
+
+  async function loadUrl(targetUrl: string, preferredNodeKey?: string): Promise<void> {
     // A refresh or nearby URL often preserves ids, URLs, names, or headlines.
     // Capture the current node before replacing the graph so the resolver can
     // land on the closest equivalent node after the new page is parsed.
@@ -78,20 +91,23 @@ export function App(): React.JSX.Element {
     setMessage('Fetching page...');
     setSelectedKey(undefined);
     setAppView(nextView);
-    appHistory.replace({ view: nextView });
+    appHistory.replace({ view: nextView, url: targetUrl });
 
     try {
-      const page = await fetchClient.fetchPage(url);
+      const page = await fetchClient.fetchPage(targetUrl);
       const result = explorer.analyzeHtml(page.text);
-      const resolvedSelection = selectionResolver.resolve(result.graph, previousSelection);
+      const resolvedSelection = preferredNodeKey
+        ? result.graph.byKey[preferredNodeKey] ?? result.graph.byId[preferredNodeKey] ?? selectionResolver.resolve(result.graph, previousSelection)
+        : selectionResolver.resolve(result.graph, previousSelection);
       setBlocks(result.blocks);
       setGraph(result.graph);
       setFindings(result.findings);
       setSourceUrl(page.url);
+      setUrl(page.url);
       setSelectedKey(resolvedSelection?.key);
       setStatus('ready');
       setMessage(`${result.blocks.length} JSON-LD block${result.blocks.length === 1 ? '' : 's'} found from HTTP ${page.status}.`);
-      appHistory.replace({ view: nextView, node: nextView === 'explorer' ? resolvedSelection?.key : undefined });
+      appHistory.replace({ view: nextView, url: page.url, node: nextView === 'explorer' ? resolvedSelection?.key : undefined });
     } catch (error) {
       setBlocks([]);
       setGraph(emptyGraph);

@@ -194,11 +194,12 @@ Relevant files:
 Hash state supports:
 
 - `view=explorer|spec|raw`
+- `url=<fetched page URL>`
 - `node=<graph node key>`
 - `type=<Schema.org type>`
 - `property=<Schema.org property>`
 
-Back/forward works for node selection, spec selection, and top-level view switching.
+When `url` is present on initial page load, the app fetches that page automatically and then selects the requested `node` when possible. Back/forward works for node selection, spec selection, and top-level view switching.
 
 Relevant file:
 

@@ -4,6 +4,7 @@ export type AppView = 'explorer' | 'spec' | 'raw';
 
 export interface AppLocationState {
   view?: AppView;
+  url?: string;
   node?: string;
   spec?: SpecSelection;
 }
@@ -43,6 +44,7 @@ export class AppHistory {
 
     return {
       view,
+      url: params.get('url') ?? undefined,
       node: params.get('node') ?? undefined,
       spec: type ? { kind: 'type', id: type } : property ? { kind: 'property', id: property } : undefined
     };
@@ -61,6 +63,9 @@ export class AppHistory {
     // scratch so stale node/type/property params cannot survive a tab switch.
     if (state.view) {
       params.set('view', state.view);
+    }
+    if (state.url) {
+      params.set('url', state.url);
     }
     if (state.node) {
       params.set('node', state.node);
