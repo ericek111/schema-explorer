@@ -946,6 +946,10 @@ h1 {
   margin-bottom: 0.75rem;
 }
 
+.full-width-panel {
+  grid-column: 1 / -1;
+}
+
 .properties {
   display: grid;
   grid-template-columns: minmax(7rem, 0.4fr) minmax(0, 1fr);
@@ -1045,11 +1049,36 @@ h1 {
   margin-top: 1rem;
 }
 
-.reference-group h4 {
-  color: #687582;
-  font-size: 0.82rem;
+.reference-group-toggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+  min-height: 2rem;
   margin-bottom: 0.5rem;
+  border: 0;
+  background: transparent;
+  color: #687582;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
   text-transform: uppercase;
+}
+
+.reference-group-toggle span,
+.reference-group-toggle em {
+  color: #176b5b;
+  font-size: 0.82rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.reference-group-toggle strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
 }
 
 .reference-row {

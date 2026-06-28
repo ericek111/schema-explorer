@@ -47,7 +47,7 @@ export function NodeDetail({
       </header>
 
       <div className="detail-grid">
-        <section className="panel">
+        <section className="panel full-width-panel">
           <h3>Properties</h3>
           <dl className="properties">
             {Object.entries(node.data)
@@ -67,15 +67,15 @@ export function NodeDetail({
           </dl>
         </section>
 
-        <section className="panel">
+        <section className="panel full-width-panel">
           <h3>References</h3>
-          <ReferenceList title="Outbound" edges={outbound} graph={graph} onSelect={onSelect} onSelectSpec={onSelectSpec} />
+          <ReferenceList title="Outbound" edges={outbound} graph={graph} onSelect={onSelect} onSelectSpec={onSelectSpec} defaultCollapsed />
           <ReferenceList title="Inbound" edges={inbound} graph={graph} onSelect={onSelect} onSelectSpec={onSelectSpec} inbound />
         </section>
 
-        <section className="panel">
-          <h3>Findings</h3>
-          {nodeFindings.length ? (
+        {nodeFindings.length ? (
+          <section className="panel">
+            <h3>Findings</h3>
             <ul className="findings">
               {nodeFindings.map((finding, index) => (
                 <li key={`${finding.message}-${index}`} className={finding.severity}>
@@ -85,10 +85,8 @@ export function NodeDetail({
                 </li>
               ))}
             </ul>
-          ) : (
-            <p className="quiet">No findings for this node.</p>
-          )}
-        </section>
+          </section>
+        ) : null}
 
         <section className="panel raw-panel">
           <h3>Raw JSON</h3>

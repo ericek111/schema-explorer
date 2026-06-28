@@ -134,21 +134,21 @@ export function App(): React.JSX.Element {
             </button>
             <button
               type="button"
-              className={appView === 'spec' ? 'active' : ''}
-              onClick={() => selectView('spec')}
-              role="tab"
-              aria-selected={appView === 'spec'}
-            >
-              Spec
-            </button>
-            <button
-              type="button"
               className={appView === 'raw' ? 'active' : ''}
               onClick={() => selectView('raw')}
               role="tab"
               aria-selected={appView === 'raw'}
             >
               Raw
+            </button>
+            <button
+              type="button"
+              className={appView === 'spec' ? 'active' : ''}
+              onClick={() => selectView('spec')}
+              role="tab"
+              aria-selected={appView === 'spec'}
+            >
+              Spec
             </button>
           </div>
         </div>

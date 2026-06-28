@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { GraphEdge, GraphModel } from '../../lib/SchemaTypes';
 import { SchemaTermNormalizer } from '../../lib/jsonld/SchemaTermNormalizer';
 import type { SpecSelection } from '../utils/SchemaSpecIndex';
@@ -13,7 +13,8 @@ export function ReferenceList({
   graph,
   onSelect,
   onSelectSpec,
-  inbound = false
+  inbound = false,
+  defaultCollapsed = false
 }: {
   title: string;
   edges: GraphEdge[];
@@ -21,11 +22,18 @@ export function ReferenceList({
   onSelect: (key: string) => void;
   onSelectSpec: (selection: SpecSelection) => void;
   inbound?: boolean;
+  defaultCollapsed?: boolean;
 }): React.JSX.Element {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+
   return (
     <div className="reference-group">
-      <h4>{title}</h4>
-      {edges.length ? (
+      <button className="reference-group-toggle" type="button" onClick={() => setCollapsed((current) => !current)} aria-expanded={!collapsed}>
+        <span>{collapsed ? '+' : '-'}</span>
+        <strong>{title}</strong>
+        <em>{edges.length}</em>
+      </button>
+      {collapsed ? null : edges.length ? (
         edges.map((edge, index) => {
           const key = inbound ? edge.from : edge.to;
           const target = graph.byKey[key];

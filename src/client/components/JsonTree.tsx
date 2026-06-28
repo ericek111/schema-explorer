@@ -1,20 +1,32 @@
 import React, { useState } from 'react';
 import type { JsonObject, JsonValue } from '../../lib/SchemaTypes';
 
-export function JsonTree({ value, label = 'root', defaultExpanded = true }: { value: JsonValue; label?: string; defaultExpanded?: boolean }): React.JSX.Element {
-  return <JsonTreeNode label={label} value={value} level={0} defaultExpanded={defaultExpanded} />;
+export function JsonTree({
+  value,
+  label = 'root',
+  defaultExpanded = true,
+  expandAll = false
+}: {
+  value: JsonValue;
+  label?: string;
+  defaultExpanded?: boolean;
+  expandAll?: boolean;
+}): React.JSX.Element {
+  return <JsonTreeNode label={label} value={value} level={0} defaultExpanded={defaultExpanded} expandAll={expandAll} />;
 }
 
 function JsonTreeNode({
   label,
   value,
   level,
-  defaultExpanded
+  defaultExpanded,
+  expandAll
 }: {
   label: string;
   value: JsonValue;
   level: number;
   defaultExpanded: boolean;
+  expandAll: boolean;
 }): React.JSX.Element {
   const expandable = Array.isArray(value) || isObject(value);
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -41,9 +53,7 @@ function JsonTreeNode({
       {expanded ? (
         <div>
           {entries.map(([key, item]) => (
-            // Expand the first two levels by default: enough context for raw
-            // JSON-LD blocks without opening every deeply nested value.
-            <JsonTreeNode key={key} label={key} value={item} level={level + 1} defaultExpanded={level < 1} />
+            <JsonTreeNode key={key} label={key} value={item} level={level + 1} defaultExpanded={expandAll || level < 1} expandAll={expandAll} />
           ))}
         </div>
       ) : null}

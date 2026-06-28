@@ -14,7 +14,7 @@ export function RawJsonView({ blocks, sourceUrl }: { blocks: JsonLdBlock[]; sour
           {blocks.map((block) => (
             <section className="raw-json-block" key={block.index}>
               <h3>Block {block.index + 1}</h3>
-              {block.value ? <JsonTree value={block.value} label={`script[${block.index}]`} /> : null}
+              {block.value ? <JsonTree value={block.value} label={`script[${block.index}]`} expandAll /> : null}
               {block.error ? (
                 <div className="raw-json-error">
                   <strong>Parse error</strong>
